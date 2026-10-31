@@ -33,3 +33,33 @@ def run_batch_billing():
             created_invoices.append(invoice)
 
     return created_invoices
+
+from decimal import Decimal
+from django.db import transaction
+from .models import Invoice, InvoiceStatus, Payment
+
+
+def record_payment_for_invoice(
+    invoice_id, payment_method, amount, notes=None
+):
+  """Records a payment against an invoice and updates its status to PAID when fully settled."""
+  with transaction.atomic():
+    invoice = Invoice.objects.select_for_update().get(id=invoice_id)
+
+    # Create payment record
+    payment = Payment.objects.create(
+        invoice=invoice,
+        payment_method=payment_method,
+        amount=amount,
+        notes=notes,
+    )
+
+    # Calculate total paid so far
+    total_paid = sum(p.amount for p in invoice.payments.all())
+
+    # Update invoice status if fully paid
+    if total_paid >= invoice.total_amount:
+      invoice.status = InvoiceStatus.PAID
+      invoice.save()
+
+    return payment
