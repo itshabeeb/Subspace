@@ -115,3 +115,39 @@ class Payment(models.Model):
   amount = models.DecimalField(max_digits=10, decimal_places=2)
   payment_date = models.DateField(auto_now_add=True)
   notes = models.TextField(blank=True, null=True)
+
+
+class DiscountType(models.TextChoices):
+  FIXED = 'FIXED', 'Fixed Amount'
+  PERCENTAGE = 'PERCENTAGE', 'Percentage'
+
+
+class Discount(models.Model):
+  code = models.CharField(max_length=50, unique=True)
+  discount_type = models.CharField(
+      max_length=20, choices=DiscountType.choices, default=DiscountType.FIXED
+  )
+  value = models.DecimalField(
+      max_digits=10, decimal_places=2
+  )  # e.g. 15.00 for $15 or 15%
+  min_purchase_amount = models.DecimalField(
+      max_digits=10, decimal_places=2, default=Decimal('0.00')
+  )
+  min_quantity = models.IntegerField(default=1)
+  start_date = models.DateField()
+  end_date = models.DateField()
+  max_uses = models.IntegerField(default=100)
+  uses_count = models.IntegerField(default=0)
+  is_active = models.BooleanField(default=True)
+
+  def is_valid_for(self, amount, quantity):
+    from datetime import date
+
+    today = date.today()
+    if not self.is_active or self.uses_count >= self.max_uses:
+      return False
+    if today < self.start_date or today > self.end_date:
+      return False
+    if amount < self.min_purchase_amount or quantity < self.min_quantity:
+      return False
+    return True
