@@ -25,6 +25,7 @@ interface LoginApiResponse {
     role: string;
   };
   detail?: string;
+  error?: string;
   message?: string;
 }
 const API_BASE_URL = "http://127.0.0.1:8000";
@@ -128,6 +129,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     if (!response.ok) {
       throw new Error(
         data.detail ||
+        data.error ||
         data.message ||
         "Invalid email or password."
       );
