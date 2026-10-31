@@ -5,12 +5,15 @@ from rest_framework import serializers
 from .models import (
     Discount,
     Invoice,
+    InvoiceLine,
     Payment,
     Plan,
     Product,
     ProductVariant,
     Role,
     Subscription,
+    SubscriptionLine,
+    Tax,
     User,
 )
 
@@ -89,9 +92,22 @@ class PlanSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TaxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tax
+        fields = '__all__'
+
+
+class SubscriptionLineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionLine
+        fields = '__all__'
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     customer_email = serializers.ReadOnlyField(source='customer.email')
     plan_name = serializers.ReadOnlyField(source='plan.name')
+    lines = SubscriptionLineSerializer(many=True, read_only=True)
 
     class Meta:
         model = Subscription
@@ -100,6 +116,10 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class InvoiceSerializer(serializers.ModelSerializer):
     customer_email = serializers.ReadOnlyField(source='customer.email')
+    lines = serializers.SerializerMethodField()
+
+    def get_lines(self, obj):
+        return InvoiceLineSerializer(obj.lines.all(), many=True).data
 
     class Meta:
         model = Invoice
@@ -109,6 +129,12 @@ class InvoiceSerializer(serializers.ModelSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
+        fields = '__all__'
+
+
+class InvoiceLineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceLine
         fields = '__all__'
 
 

@@ -1,6 +1,8 @@
 from decimal import Decimal, InvalidOperation
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.db.models import Sum
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
@@ -10,11 +12,14 @@ from rest_framework.response import Response
 from .models import (
     Discount,
     Invoice,
+    InvoiceLine,
     Payment,
     Plan,
     Product,
     Role,
     Subscription,
+    SubscriptionLine,
+    Tax,
     User,
 )
 from .serializers import (
@@ -25,8 +30,11 @@ from .serializers import (
     PlanSerializer,
     SubscriptionSerializer,
     InvoiceSerializer,
+    InvoiceLineSerializer,
     PaymentSerializer,
     DiscountSerializer,
+    TaxSerializer,
+    SubscriptionLineSerializer,
 )
 from .services import record_payment_for_invoice, run_batch_billing
 
@@ -45,6 +53,14 @@ class IsStaffRole(BasePermission):
         return bool(
             request.user
             and request.user.is_authenticated
+            and request.user.role in (Role.ADMIN, Role.STAFF)
+        )
+
+
+class StaffOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in ('GET', 'HEAD', 'OPTIONS') or (
+            request.user.is_authenticated
             and request.user.role in (Role.ADMIN, Role.STAFF)
         )
 
@@ -99,6 +115,7 @@ def login_user(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
+    login(request, authenticated_user)
     return Response({'user': UserSerializer(authenticated_user).data})
 
 
@@ -129,6 +146,9 @@ def report_stats(request):
         Payment.objects.aggregate(total=Sum('amount'))['total']
         or Decimal('0.00')
     )
+    outstanding = Invoice.objects.exclude(status='PAID').aggregate(
+        total=Sum('total_amount')
+    )['total'] or Decimal('0.00')
     return Response({
         'customers': User.objects.filter(role=Role.CUSTOMER).count(),
         'staff': User.objects.filter(role=Role.STAFF).count(),
@@ -137,7 +157,52 @@ def report_stats(request):
         'invoices': Invoice.objects.count(),
         'payments': Payment.objects.count(),
         'revenue': paid_revenue,
+        'active_subscriptions': Subscription.objects.filter(status='ACTIVE').count(),
+        'outstanding': outstanding,
+        'overdue_invoices': Invoice.objects.filter(
+            due_date__lt=__import__('datetime').date.today()
+        ).exclude(status='PAID').count(),
     })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_request(request):
+    email = request.data.get('email')
+    user = User.objects.filter(email=email, is_active=True).first()
+    if user:
+        token = default_token_generator.make_token(user)
+        send_mail(
+            'Subspace password reset',
+            f'Use this token with uid {user.pk} to reset your password: {token}',
+            None,
+            [user.email],
+        )
+    return Response({
+        'message': 'If the email exists, a reset link has been sent.'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm(request):
+    user_id = request.data.get('user_id')
+    token = request.data.get('token')
+    password = request.data.get('password')
+    user = User.objects.filter(pk=user_id, is_active=True).first()
+    if not user or not default_token_generator.check_token(user, token):
+        return Response(
+            {'error': 'Invalid or expired reset token.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if not password or len(password) < 8:
+        return Response(
+            {'error': 'Password must be at least 8 characters long.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    user.set_password(password)
+    user.save(update_fields=['password'])
+    return Response({'message': 'Password reset successfully.'})
 
 
 @api_view(['POST'])
@@ -156,31 +221,69 @@ def trigger_batch_billing(request):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [StaffOrReadOnly]
 
 
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
+    permission_classes = [StaffOrReadOnly]
+
+
+class TaxViewSet(viewsets.ModelViewSet):
+    queryset = Tax.objects.all()
+    serializer_class = TaxSerializer
+    permission_classes = [IsStaffRole]
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
 
+    def get_queryset(self):
+        queryset = Subscription.objects.all()
+        if self.request.user.role not in (Role.ADMIN, Role.STAFF):
+            queryset = queryset.filter(customer=self.request.user)
+        return queryset
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsStaffRole()]
+
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
 
+    def get_queryset(self):
+        queryset = Invoice.objects.all()
+        if self.request.user.role not in (Role.ADMIN, Role.STAFF):
+            queryset = queryset.filter(customer=self.request.user)
+        return queryset
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsStaffRole()]
+
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Payment.objects.select_related('invoice')
+        if self.request.user.role not in (Role.ADMIN, Role.STAFF):
+            queryset = queryset.filter(invoice__customer=self.request.user)
+        return queryset
 
 
 class DiscountViewSet(viewsets.ModelViewSet):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
+    permission_classes = [IsAdminRole]
 
 
 @api_view(['POST'])
