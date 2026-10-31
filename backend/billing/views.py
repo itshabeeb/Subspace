@@ -49,6 +49,14 @@ class IsStaffRole(BasePermission):
         )
 
 
+class StaffOrReadOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in ('GET', 'HEAD', 'OPTIONS') or (
+            request.user.is_authenticated
+            and request.user.role in (Role.ADMIN, Role.STAFF)
+        )
+
+
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def register_user(request):
@@ -157,31 +165,63 @@ def trigger_batch_billing(request):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [StaffOrReadOnly]
 
 
 class PlanViewSet(viewsets.ModelViewSet):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
+    permission_classes = [StaffOrReadOnly]
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
 
+    def get_queryset(self):
+        queryset = Subscription.objects.all()
+        if self.request.user.role not in (Role.ADMIN, Role.STAFF):
+            queryset = queryset.filter(customer=self.request.user)
+        return queryset
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsStaffRole()]
+
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
 
+    def get_queryset(self):
+        queryset = Invoice.objects.all()
+        if self.request.user.role not in (Role.ADMIN, Role.STAFF):
+            queryset = queryset.filter(customer=self.request.user)
+        return queryset
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsStaffRole()]
+
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Payment.objects.select_related('invoice')
+        if self.request.user.role not in (Role.ADMIN, Role.STAFF):
+            queryset = queryset.filter(invoice__customer=self.request.user)
+        return queryset
 
 
 class DiscountViewSet(viewsets.ModelViewSet):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
+    permission_classes = [IsAdminRole]
 
 
 @api_view(['POST'])
