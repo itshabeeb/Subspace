@@ -1,0 +1,460 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #080914;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.subspace-login {
+  --spot-x: 50%;
+  --spot-y: 45%;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+  color: #f8fafc;
+  background:
+    radial-gradient(680px circle at var(--spot-x) var(--spot-y), rgba(99, 102, 241, .15), transparent 68%),
+    radial-gradient(ellipse at 12% 10%, rgba(79, 70, 229, .13), transparent 38%),
+    linear-gradient(135deg, #090a16 0%, #0d1020 52%, #111027 100%);
+}
+
+.login-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
+
+.login-side {
+  position: relative;
+  z-index: 2;
+  background: rgba(9, 10, 22, .58);
+  border-right: 1px solid rgba(148, 163, 184, .09);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  /* Intentionally static: only the background reacts to pointer movement. */
+}
+
+.brand-mark {
+  text-decoration: none;
+}
+
+.brand-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(145deg, #818cf8, #6366f1 65%, #4f46e5);
+  box-shadow: 0 9px 26px rgba(99, 102, 241, .28), inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+.eyebrow {
+  color: #a5b4fc;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+.login-card h1,
+.login-card .text-slate-950 {
+  color: #f8fafc;
+}
+
+.login-card p.text-slate-500 {
+  color: #9ca3af;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #d1d5db;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field-wrap {
+  position: relative;
+}
+
+.field-icon {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  color: #818aa0;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.login-input {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 15px 12px 45px;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 12px;
+  outline: none;
+  color: #f8fafc;
+  background: rgba(20, 24, 43, .88);
+  font-size: 13px;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.login-input::placeholder {
+  color: #697386;
+}
+
+.login-input:hover {
+  border-color: rgba(129, 140, 248, .55);
+}
+
+.login-input:focus {
+  border-color: #818cf8;
+  background: #171b31;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, .16);
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #8992a6;
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 180ms ease, background 180ms ease;
+}
+
+.password-toggle:hover {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, .15);
+}
+
+.password-toggle:focus-visible,
+.signin-button:focus-visible,
+.brand-mark:focus-visible,
+.subspace-login a:focus-visible {
+  outline: 3px solid rgba(129, 140, 248, .55);
+  outline-offset: 3px;
+}
+
+.signin-button {
+  --button-x: 50%;
+  --button-y: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.16);
+  background:
+    radial-gradient(170px circle at var(--button-x) var(--button-y), rgba(255,255,255,.25), transparent 72%),
+    linear-gradient(110deg, #4f46e5, #6256e9 52%, #7c3aed);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, .28), inset 0 1px 0 rgba(255,255,255,.2);
+  transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+
+.signin-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(79, 70, 229, .36), inset 0 1px 0 rgba(255,255,255,.2);
+  filter: saturate(1.08);
+}
+
+.signin-button:active:not(:disabled) {
+  transform: translateY(0) scale(.99);
+}
+
+.login-ambient {
+  position: absolute;
+  z-index: 0;
+  width: 390px;
+  height: 390px;
+  border-radius: 999px;
+  filter: blur(90px);
+  opacity: .27;
+  pointer-events: none;
+  animation: ambient-drift 22s ease-in-out infinite alternate;
+}
+
+.login-ambient-one {
+  top: -210px;
+  left: 18%;
+  background: rgba(99, 102, 241, .42);
+}
+
+.login-ambient-two {
+  right: -180px;
+  bottom: -220px;
+  background: rgba(139, 92, 246, .34);
+  animation-delay: -9s;
+}
+
+.login-grain {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: .075;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E");
+}
+
+.branding-side {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+  background: #11102b;
+}
+
+/* Animated background layer only. The branding content/cards remain still. */
+.branding-side::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: -18%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 76% 24%, rgba(139, 92, 246, .42), transparent 34%),
+    radial-gradient(ellipse at 18% 82%, rgba(79, 70, 229, .42), transparent 42%),
+    radial-gradient(ellipse at 52% 52%, rgba(49, 46, 129, .5), transparent 55%),
+    linear-gradient(145deg, #11112b 0%, #21164b 48%, #171333 100%);
+  background-size: 150% 150%;
+  animation: background-flow 24s ease-in-out infinite alternate;
+}
+
+.branding-side::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(600px circle at var(--spot-x) var(--spot-y), rgba(167, 139, 250, .12), transparent 70%);
+  opacity: .8;
+}
+
+.branding-grid {
+  position: absolute;
+  inset: 0;
+  opacity: .1;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.14) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.14) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: linear-gradient(to bottom right, black, transparent 85%);
+}
+
+.branding-orb {
+  position: absolute;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+  pointer-events: none;
+  /* Static decorative shapes; no cursor parallax. */
+}
+
+.branding-orb-a {
+  top: 8%;
+  right: -145px;
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle at 35% 35%, rgba(196,181,253,.16), rgba(129,140,248,.025) 68%);
+  box-shadow: inset 0 0 80px rgba(255,255,255,.035), 0 0 100px rgba(129,140,248,.1);
+}
+
+.branding-orb-b {
+  bottom: -210px;
+  left: -120px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle at 65% 25%, rgba(167,139,250,.15), rgba(99,102,241,.02) 68%);
+}
+
+.branding-orb-c {
+  top: 17%;
+  left: 12%;
+  width: 115px;
+  height: 115px;
+  border-color: rgba(255,255,255,.09);
+  box-shadow: 0 0 55px rgba(196,181,253,.1);
+}
+
+.branding-content {
+  width: 100%;
+}
+
+.brand-pill {
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.9);
+  background: rgba(255,255,255,.065);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+  backdrop-filter: blur(14px);
+}
+
+.feature-row {
+  border: 1px solid rgba(255,255,255,.085);
+  background: rgba(255,255,255,.045);
+  backdrop-filter: blur(12px);
+  transition: background 220ms ease, border-color 220ms ease;
+}
+
+.feature-row:hover {
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.075);
+}
+
+.feature-check {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  color: #ddd6fe;
+  background: rgba(196,181,253,.14);
+}
+
+.floating-note {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 15px;
+  border: 1px solid rgba(255,255,255,.17);
+  border-radius: 14px;
+  color: white;
+  background: rgba(20, 17, 55, .52);
+  box-shadow: 0 18px 50px rgba(5, 4, 25, .24), inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter: blur(18px);
+  pointer-events: none;
+}
+
+.floating-note strong,
+.floating-note small {
+  display: block;
+  white-space: nowrap;
+}
+
+.floating-note strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.floating-note small {
+  margin-top: 3px;
+  color: rgba(224,231,255,.66);
+  font-size: 9px;
+}
+
+.floating-note-top {
+  top: 13%;
+  right: 8%;
+}
+
+.floating-note-bottom {
+  right: 7%;
+  bottom: 12%;
+}
+
+.floating-note-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 10px;
+  color: #ddd6fe;
+  background: rgba(167,139,250,.2);
+}
+
+.note-status {
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: #6ee7b7;
+  box-shadow: 0 0 12px rgba(110,231,183,.8);
+}
+
+.note-chart {
+  display: flex;
+  height: 30px;
+  align-items: end;
+  gap: 3px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  background: rgba(167,139,250,.18);
+}
+
+.note-chart span {
+  width: 4px;
+  border-radius: 3px;
+  background: #c4b5fd;
+}
+.note-chart span:nth-child(1) { height: 8px; }
+.note-chart span:nth-child(2) { height: 13px; }
+.note-chart span:nth-child(3) { height: 10px; }
+.note-chart span:nth-child(4) { height: 17px; }
+.note-chart span:nth-child(5) { height: 21px; }
+
+@keyframes ambient-drift {
+  from { transform: translate3d(-10px, -8px, 0) scale(.96); }
+  to { transform: translate3d(16px, 14px, 0) scale(1.05); }
+}
+
+@keyframes background-flow {
+  0% { transform: translate3d(-1.5%, -1%, 0) scale(1); background-position: 0% 40%; }
+  100% { transform: translate3d(1.5%, 1%, 0) scale(1.04); background-position: 100% 60%; }
+}
+
+@media (max-width: 1023px) {
+  .login-card {
+    max-width: 420px;
+  }
+  .subspace-login {
+    overflow-x: hidden;
+  }
+  .login-side {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-side {
+    padding: 34px 22px;
+  }
+  .brand-mark {
+    margin-bottom: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
