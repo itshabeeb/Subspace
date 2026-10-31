@@ -1,7 +1,22 @@
 
 import { useEffect, useState } from "react";
-import { getProducts } from "../../services/productService";
-import type { Product } from "../../services/productService";
+import api from "../../services/api";
+
+interface ProductVariant {
+  id: number;
+  brand_name: string;
+  extra_price: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  product_type: string;
+  sales_price: string;
+  cost_price: string;
+  notes: string;
+  variants: ProductVariant[];
+}
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -11,11 +26,14 @@ export default function Products() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await getProducts();
-        setProducts(data);
+        const response = await api.get("products/");
+
+        const data = response.data;
+
+        setProducts(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
-        console.error("Product API error:", err);
-        setError("Unable to load products. Please try again.");
+        console.error("Products API error:", err);
+        setError("Unable to load products. Please check the backend.");
       } finally {
         setLoading(false);
       }
@@ -25,56 +43,66 @@ export default function Products() {
   }, []);
 
   if (loading) {
-    return <h2>Loading products...</h2>;
+    return <div style={{ padding: 30 }}>Loading products...</div>;
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <div style={{ padding: 30, color: "red" }}>{error}</div>;
   }
 
   return (
-    <div style={{ padding: "30px" }}>
+    <div style={{ padding: 30, color: "#ffffff" }}>
       <h1>Products</h1>
-      <p>Products retrieved from the Subspace database.</p>
 
-      {products.length === 0 ? (
-        <p>No products available.</p>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px" }}>
-          {products.map((product) => (
-            <div
-              key={product.id}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                padding: "20px",
-              }}
-            >
-              <h2>{product.name}</h2>
+      <p style={{ color: "#9ca3af" }}>
+        Manage products available in Subspace.
+      </p>
 
-              <p>Category: {product.product_type}</p>
+      <h3>Total products: {products.length}</h3>
 
-              <h3>₹{Number(product.sales_price).toLocaleString("en-IN")}</h3>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        gap: 20,
+        marginTop: 25
+      }}>
+        {products.map((product) => (
+          <div
+            key={product.id}
+            style={{
+              background: "#151827",
+              border: "1px solid #303449",
+              borderRadius: 12,
+              padding: 20
+            }}
+          >
+            <h2>{product.name}</h2>
 
-              <p>{product.notes}</p>
+            <p style={{ color: "#a5a9bd" }}>
+              {product.product_type}
+            </p>
 
-              <hr />
+            <p>
+              Sales price: ₹{product.sales_price}
+            </p>
 
-              <h4>Variants</h4>
+            <p>
+              Cost price: ₹{product.cost_price}
+            </p>
 
-              {product.variants?.length > 0 ? (
-                product.variants.map((variant) => (
-                  <p key={variant.id}>
-                    {variant.brand_name} — Extra ₹
-                    {Number(variant.extra_price).toLocaleString("en-IN")}
-                  </p>
-                ))
-              ) : (
-                <p>No variants available.</p>
-              )}
-            </div>
-          ))}
-        </div>
+            <p style={{ color: "#a5a9bd" }}>
+              {product.notes}
+            </p>
+
+            <p>
+              Variants: {product.variants?.length || 0}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {products.length === 0 && (
+        <p>No products found.</p>
       )}
     </div>
   );
