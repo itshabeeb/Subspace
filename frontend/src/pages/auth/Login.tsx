@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
-import { Link } from "react-router-dom";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type PointerEvent,
+} from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   CheckCircle2,
@@ -9,9 +15,24 @@ import {
   Mail,
   Zap,
 } from "lucide-react";
+import { useAuth, type User } from "../../context/AuthContext";
+
+interface LoginApiResponse {
+  user: User;
+  access?: string;
+  access_token?: string;
+  token?: string;
+  detail?: string;
+  message?: string;
+}
+const API_BASE_URL = "http://127.0.0.1:8000";
+const LOGIN_ENDPOINT = "/api/auth/login/";
 
 export default function Login() {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +40,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Only the background spotlight follows the pointer. Content stays completely still.
+  // Only the background spotlight follows the pointer. Content stays still.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -61,38 +82,102 @@ export default function Login() {
     };
   }, []);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
+  
+const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  setError("");
 
-    if (!email.trim() || !password) {
-      setError("Please enter your email and password.");
-      return;
-    }
+  if (!email.trim() || !password) {
+    setError("Please enter your email and password.");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${LOGIN_ENDPOINT}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        email: email.trim(),
+        password,
+      }),
+    });
+
+    // Safely read the response
+    const responseText = await response.text();
+
+    let data: LoginApiResponse;
 
     try {
-      // TODO: Connect your Django login API here.
-      // Example:
-      // const response = await api.post("/auth/login/", {
-      //   email, password, remember
-      // });
-
-      console.log({ email, password, remember });
-
-      // Handle successful authentication here.
+      data = responseText
+        ? JSON.parse(responseText)
+        : ({} as LoginApiResponse);
     } catch {
-      setError("Invalid email or password. Please try again.");
-    } finally {
-      setLoading(false);
+      throw new Error(
+        "The server returned an invalid response. Please contact the backend team."
+      );
     }
-  };
+
+    if (!response.ok) {
+      throw new Error(
+        data.detail ||
+        data.message ||
+        "Invalid email or password."
+      );
+    }
+
+    if (!data.user) {
+      throw new Error("User details are missing from the server response.");
+    }
+
+    if (
+      data.user.role !== "admin" &&
+      data.user.role !== "customer"
+    ) {
+      throw new Error("Invalid user role received from server.");
+    }
+
+    const token = data.access ?? data.access_token ?? data.token;
+
+    if (!token) {
+      throw new Error("Authentication token was not received.");
+    }
+
+    login(data.user, token);
+
+    navigate(
+      data.user.role === "admin"
+        ? "/admin/dashboard"
+        : "/customer/dashboard",
+      { replace: true }
+    );
+
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Unable to sign in. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleButtonPointerMove = (event: PointerEvent<HTMLButtonElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--button-x", `${event.clientX - bounds.left}px`);
-    event.currentTarget.style.setProperty("--button-y", `${event.clientY - bounds.top}px`);
+    event.currentTarget.style.setProperty(
+      "--button-x",
+      `${event.clientX - bounds.left}px`,
+    );
+    event.currentTarget.style.setProperty(
+      "--button-y",
+      `${event.clientY - bounds.top}px`,
+    );
   };
 
   return (
@@ -102,7 +187,6 @@ export default function Login() {
       <div className="login-grain" aria-hidden="true" />
 
       <div className="login-layout min-h-screen">
-        {/* LOGIN FORM */}
         <section className="login-side flex w-full items-center justify-center px-6 py-12 lg:w-1/2 lg:px-12">
           <div className="login-card w-full max-w-md">
             <Link to="/" className="brand-mark mb-12 inline-flex items-center gap-3">
@@ -146,7 +230,7 @@ export default function Login() {
                     autoComplete="email"
                     placeholder="you@company.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(event) => setEmail(event.target.value)}
                     className="login-input"
                     required
                   />
@@ -173,13 +257,13 @@ export default function Login() {
                     autoComplete="current-password"
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(event) => setPassword(event.target.value)}
                     className="login-input pr-12"
                     required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword((value) => !value)}
                     className="password-toggle"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     aria-pressed={showPassword}
@@ -194,10 +278,13 @@ export default function Login() {
                   id="remember"
                   type="checkbox"
                   checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
+                  onChange={(event) => setRemember(event.target.checked)}
                   className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-indigo-600"
                 />
-                <label htmlFor="remember" className="cursor-pointer text-[13px] text-slate-600">
+                <label
+                  htmlFor="remember"
+                  className="cursor-pointer text-[13px] text-slate-600"
+                >
                   Remember me
                 </label>
               </div>
@@ -220,7 +307,10 @@ export default function Login() {
 
             <p className="mt-8 text-center text-[13px] text-slate-500">
               Don&apos;t have an account?{" "}
-              <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-800">
+              <Link
+                to="/register"
+                className="font-semibold text-indigo-600 hover:text-indigo-800"
+              >
                 Create an account
               </Link>
             </p>
@@ -232,7 +322,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* BRAND EXPERIENCE */}
         <aside className="branding-side relative hidden items-center justify-center overflow-hidden lg:flex lg:w-1/2">
           <div className="branding-grid" aria-hidden="true" />
           <div className="branding-orb branding-orb-a" aria-hidden="true" />
@@ -271,7 +360,9 @@ export default function Login() {
                   <span className="feature-check">
                     <CheckCircle2 size={17} />
                   </span>
-                  <span className="text-[13px] font-medium text-white/90">{feature}</span>
+                  <span className="text-[13px] font-medium text-white/90">
+                    {feature}
+                  </span>
                 </div>
               ))}
             </div>
