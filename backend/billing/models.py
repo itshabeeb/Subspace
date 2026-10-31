@@ -45,6 +45,9 @@ class Plan(models.Model):
     YEARLY = 'YEARLY', 'Yearly'
 
   name = models.CharField(max_length=100)
+  price = models.DecimalField(
+      max_digits=10, decimal_places=2, default=Decimal('0.00')
+  )
   billing_cycle = models.CharField(
       max_length=20, choices=Cycle.choices, default=Cycle.MONTHLY
   )
@@ -52,6 +55,12 @@ class Plan(models.Model):
   start_date = models.DateField()
   end_date = models.DateField(blank=True, null=True)
   auto_close = models.BooleanField(default=False)
+
+
+class Tax(models.Model):
+  name = models.CharField(max_length=100)
+  rate = models.DecimalField(max_digits=5, decimal_places=2)
+  is_active = models.BooleanField(default=True)
 
 
 class SubscriptionStatus(models.TextChoices):
@@ -75,7 +84,24 @@ class Subscription(models.Model):
   )
   start_date = models.DateField()
   expiry_date = models.DateField()
+  payment_terms = models.CharField(max_length=100, blank=True, default='')
   created_at = models.DateTimeField(auto_now_add=True)
+
+
+class SubscriptionLine(models.Model):
+  subscription = models.ForeignKey(
+      Subscription, on_delete=models.CASCADE, related_name='lines'
+  )
+  product = models.ForeignKey(Product, on_delete=models.PROTECT)
+  quantity = models.PositiveIntegerField(default=1)
+  unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+  tax_rate = models.DecimalField(
+      max_digits=5, decimal_places=2, default=Decimal('0.00')
+  )
+
+  @property
+  def amount(self):
+    return self.quantity * self.unit_price
 
 
 class InvoiceStatus(models.TextChoices):
@@ -96,13 +122,31 @@ class Invoice(models.Model):
   discount_amount = models.DecimalField(
       max_digits=10, decimal_places=2, default=Decimal('0.00')
   )
+  discount = models.ForeignKey(
+      'Discount', on_delete=models.SET_NULL, null=True, blank=True,
+      related_name='invoices'
+  )
   total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+  due_date = models.DateField(null=True, blank=True)
   status = models.CharField(
       max_length=20,
       choices=InvoiceStatus.choices,
       default=InvoiceStatus.DRAFT,
   )
   created_at = models.DateTimeField(auto_now_add=True)
+
+
+class InvoiceLine(models.Model):
+  invoice = models.ForeignKey(
+      Invoice, on_delete=models.CASCADE, related_name='lines'
+  )
+  product = models.ForeignKey(Product, on_delete=models.PROTECT)
+  quantity = models.PositiveIntegerField(default=1)
+  unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+  tax_rate = models.DecimalField(
+      max_digits=5, decimal_places=2, default=Decimal('0.00')
+  )
+  amount = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 class Payment(models.Model):
@@ -139,6 +183,7 @@ class Discount(models.Model):
   max_uses = models.IntegerField(default=100)
   uses_count = models.IntegerField(default=0)
   is_active = models.BooleanField(default=True)
+  products = models.ManyToManyField(Product, blank=True, related_name='discounts')
 
   def is_valid_for(self, amount, quantity):
     from datetime import date
