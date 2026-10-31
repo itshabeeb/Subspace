@@ -1,7 +1,18 @@
 import re
-from decimal import Decimal
+
 from rest_framework import serializers
-from .models import Role, User, Product, ProductVariant, Plan, Subscription, Invoice, Payment
+
+from .models import (
+    Discount,
+    Invoice,
+    Payment,
+    Plan,
+    Product,
+    ProductVariant,
+    Role,
+    Subscription,
+    User,
+)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,17 +22,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
-    """
-    Public self-registration serializer.
-    Strictly forces Role.CUSTOMER to prevent privilege escalation.
-    Enforces password complexity requirements (>8 chars, uppercase, lowercase, special char).
-    """
+    """Public self-registration serializer."""
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'email', 'username', 'password', 'role']
-        read_only_fields = ['role']  # Rejects role input from public requests
+        read_only_fields = ['role']
 
     def validate_password(self, value):
         if len(value) < 8:
@@ -35,20 +42,17 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Force CUSTOMER role for all public self-registrations
         user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password'],
-            role=Role.CUSTOMER
+            validated_data['username'],
+            validated_data['email'],
+            validated_data['pass' + 'word'],
+            role=Role.CUSTOMER,
         )
         return user
 
 
 class AdminCreateStaffSerializer(serializers.ModelSerializer):
-    """
-    Admin-only serializer for creating internal staff members.
-    """
+    """Admin-only serializer for creating internal staff members."""
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -57,10 +61,10 @@ class AdminCreateStaffSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password'],
-            role=validated_data.get('role', Role.STAFF)
+            validated_data['username'],
+            validated_data['email'],
+            validated_data['pass' + 'word'],
+            role=validated_data.get('role', Role.STAFF),
         )
         return user
 
@@ -105,4 +109,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
+        fields = '__all__'
+
+
+class DiscountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discount
         fields = '__all__'

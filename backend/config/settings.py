@@ -130,3 +130,4 @@ MAILERS = {
     },
 }
 AUTH_USER_MODEL = 'billing.User'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
