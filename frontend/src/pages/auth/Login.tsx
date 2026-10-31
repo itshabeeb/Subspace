@@ -18,10 +18,12 @@ import {
 import { useAuth, type User } from "../../context/AuthContext";
 
 interface LoginApiResponse {
-  user: User;
-  access?: string;
-  access_token?: string;
-  token?: string;
+  user: {
+    id: string | number;
+    username: string;
+    email: string;
+    role: string;
+  };
   detail?: string;
   message?: string;
 }
@@ -101,6 +103,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({
         email: email.trim(),
         password,
@@ -134,27 +137,22 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
       throw new Error("User details are missing from the server response.");
     }
 
-    if (
-      data.user.role !== "admin" &&
-      data.user.role !== "customer"
-    ) {
+    const role = data.user.role.toLowerCase();
+    if (role !== "admin" && role !== "customer") {
       throw new Error("Invalid user role received from server.");
     }
 
-    const token = data.access ?? data.access_token ?? data.token;
+    const user: User = {
+      id: data.user.id,
+      name: data.user.username,
+      email: data.user.email,
+      role,
+    };
 
-    if (!token) {
-      throw new Error("Authentication token was not received.");
-    }
-
-    login(data.user, token);
-
-    navigate(
-      data.user.role === "admin"
-        ? "/admin/dashboard"
-        : "/customer/dashboard",
-      { replace: true }
-    );
+    login(user);
+    navigate(role === "admin" ? "/admin/dashboard" : "/customer/dashboard", {
+      replace: true,
+    });
 
   } catch (err) {
     setError(
