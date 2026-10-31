@@ -10,7 +10,8 @@
             "tax_amount": "449.82",
             "discount_amount": "249.90",
             "total_amount": "2698.92",
-            "status": "PAID"
+            "status": "PAID",
+            "created_at": "2026-10-31T10:00:00Z"
         }
     },
     {
@@ -23,7 +24,8 @@
             "tax_amount": "899.10",
             "discount_amount": "0.00",
             "total_amount": "5894.10",
-            "status": "CONFIRMED"
+            "status": "CONFIRMED",
+            "created_at": "2026-10-31T10:00:00Z"
         }
     },
     {
@@ -36,7 +38,8 @@
             "tax_amount": "3237.84",
             "discount_amount": "500.00",
             "total_amount": "20725.84",
-            "status": "DRAFT"
+            "status": "DRAFT",
+            "created_at": "2026-10-31T10:00:00Z"
         }
     }
 ]
