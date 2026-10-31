@@ -1,8 +1,11 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import Customers from "../pages/admin/Customers";
+import Products from "../pages/admin/Products";
 import CustomerPortal from "../pages/customer/CustomerPortal";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 
@@ -11,6 +14,7 @@ export default function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />}/>
         <Route path="/admin/customers" element={<Customers />}/>

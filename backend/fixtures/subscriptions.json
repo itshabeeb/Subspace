@@ -9,7 +9,8 @@
             "plan": 1,
             "status": "ACTIVE",
             "start_date": "2026-10-01",
-            "expiry_date": "2026-11-01"
+            "expiry_date": "2026-11-01",
+            "created_at": "2026-10-31T10:00:00Z"
         }
     },
     {
@@ -21,7 +22,8 @@
             "plan": 2,
             "status": "ACTIVE",
             "start_date": "2026-10-15",
-            "expiry_date": "2026-11-15"
+            "expiry_date": "2026-11-15",
+            "created_at": "2026-10-31T10:00:00Z"
         }
     },
     {
@@ -33,7 +35,8 @@
             "plan": 3,
             "status": "CONFIRMED",
             "start_date": "2026-10-20",
-            "expiry_date": "2027-10-20"
+            "expiry_date": "2027-10-20",
+            "created_at": "2026-10-31T10:00:00Z"
         }
     }
 ]

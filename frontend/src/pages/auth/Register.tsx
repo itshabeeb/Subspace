@@ -1,184 +1,180 @@
-
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Phone,
-  Lock,
-  CheckCircle2,
-  Zap,
-} from "lucide-react";
-import "./Register.css";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 export default function Register() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const navigate = useNavigate();
+
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    setSuccess(false);
-
-    if (password.length < 8) {
-      setError("Password must contain at least 8 characters.");
-      return;
-    }
+    setSuccess("");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
-    setSuccess(true);
+    setLoading(true);
+
+    try {
+      await api.post("auth/register/", {
+        username,
+        email,
+        password,
+      });
+
+      setSuccess("Account created successfully! Redirecting to login...");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (err: any) {
+      const data = err.response?.data;
+
+      if (data) {
+        const messages = Object.entries(data)
+          .map(([field, value]) => {
+            const message = Array.isArray(value)
+              ? value.join(", ")
+              : String(value);
+            return `${field}: ${message}`;
+          })
+          .join(" ");
+
+        setError(messages || "Registration failed.");
+      } else {
+        setError("Unable to connect to the server. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const strength =
-    password.length === 0 ? 0 :
-    password.length < 8 ? 1 :
-    password.length < 12 ? 2 : 3;
-
   return (
-    <div className="register-page">
-      <div className="register-glow" />
+    <main style={{
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      background: "#0d0d20",
+      padding: "24px"
+    }}>
+      <div style={{
+        width: "100%",
+        maxWidth: "430px",
+        background: "#17172c",
+        padding: "35px",
+        borderRadius: "16px",
+        color: "white"
+      }}>
+        <h1 style={{ fontSize: "30px", marginBottom: "8px" }}>
+          Create your account
+        </h1>
 
-      <div className="register-container">
-        <div className="register-brand">
-          <div className="register-logo"><Zap size={22} /></div>
-          <span>subspace</span>
-        </div>
+        <p style={{ color: "#aaa", marginBottom: "25px" }}>
+          Join Subspace and manage your subscriptions.
+        </p>
 
-        <div className="register-card">
-          <div className="register-heading">
-            <span className="register-eyebrow">GET STARTED</span>
-            <h1>Create your account</h1>
-            <p>Manage all your subscriptions in one place.</p>
-          </div>
+        {error && (
+          <p style={{ color: "#ff7777", marginBottom: "15px" }}>
+            {error}
+          </p>
+        )}
 
-          {success ? (
-            <div className="register-success">
-              <CheckCircle2 size={48} />
-              <h2>Form completed!</h2>
-              <p>
-                Your details passed frontend validation.
-                Account creation is not connected to the backend yet.
-              </p>
-              <Link to="/login" className="register-submit">
-                Go to Login <ArrowRight size={18} />
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <label>Full name</label>
-              <div className="register-field">
-                <User size={18} />
-                <input name="name" placeholder="Enter your full name" required />
-              </div>
+        {success && (
+          <p style={{ color: "#5ee6a8", marginBottom: "15px" }}>
+            {success}
+          </p>
+        )}
 
-              <label>Email address</label>
-              <div className="register-field">
-                <Mail size={18} />
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
+        <form onSubmit={handleSubmit}>
+          <label>Username</label>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            style={inputStyle}
+            placeholder="Choose a username"
+          />
 
-              <label>Phone number</label>
-              <div className="register-field">
-                <Phone size={18} />
-                <input
-                  name="phone"
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  required
-                />
-              </div>
+          <label>Email address</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={inputStyle}
+            placeholder="you@example.com"
+          />
 
-              <label>Password</label>
-              <div className="register-field">
-                <Lock size={18} />
-                <input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="register-eye"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={inputStyle}
+            placeholder="Create a password"
+          />
 
-              <div className="password-strength">
-                {[1, 2, 3].map((n) => (
-                  <span key={n} className={strength >= n ? "active" : ""} />
-                ))}
-              </div>
-              <small>
-                {strength === 0 ? "Password strength" :
-                 strength === 1 ? "Weak password" :
-                 strength === 2 ? "Good password" : "Strong password"}
-              </small>
+          <label>Confirm password</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            style={inputStyle}
+            placeholder="Enter your password again"
+          />
 
-              <label>Confirm password</label>
-              <div className="register-field">
-                <Lock size={18} />
-                <input
-                  name="confirmPassword"
-                  type={showConfirm ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="register-eye"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                >
-                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "14px",
+              marginTop: "15px",
+              borderRadius: "10px",
+              border: "none",
+              background: "linear-gradient(90deg, #5145e5, #8138ed)",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "16px"
+            }}
+          >
+            {loading ? "Creating account..." : "Create account"}
+          </button>
+        </form>
 
-              <label className="register-terms">
-                <input type="checkbox" required />
-                <span>
-                  I agree to the Terms & Conditions and Privacy Policy.
-                </span>
-              </label>
-
-              {error && <div className="register-error">{error}</div>}
-
-              <button type="submit" className="register-submit">
-                Create Account <ArrowRight size={18} />
-              </button>
-            </form>
-          )}
-
-          <div className="register-footer">
-            Already have an account? <Link to="/login">Sign in</Link>
-          </div>
-        </div>
-
-        <p className="register-copyright">
-          © 2026 Subspace. All rights reserved.
+        <p style={{ textAlign: "center", marginTop: "25px", color: "#aaa" }}>
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "#a99aff" }}>
+            Sign in
+          </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  padding: "12px",
+  marginTop: "8px",
+  marginBottom: "18px",
+  borderRadius: "8px",
+  border: "1px solid #383854",
+  background: "#101024",
+  color: "white",
+  outline: "none"
+};
