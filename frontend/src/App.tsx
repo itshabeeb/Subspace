@@ -7,6 +7,7 @@ import Login from "./pages/auth/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CustomerPortal from "./pages/customer/CustomerPortal";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -27,6 +28,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       <Route element={<ProtectedRoute allowedRole="admin" />}>
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -38,7 +41,6 @@ function AppRoutes() {
 
       <Route path="/" element={<HomeRedirect />} />
       <Route path="*" element={<HomeRedirect />} />
-      <Route path="/register" element={<Register />} />
     </Routes>
   );
 }
