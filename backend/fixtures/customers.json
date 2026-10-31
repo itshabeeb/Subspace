@@ -1,0 +1,33 @@
+
+[
+    {
+        "model": "billing.user",
+        "pk": 3,
+        "fields": {
+            "username": "alice",
+            "email": "alice@example.com",
+            "password": "pbkdf2_sha256$1500000$w9JYqd1ZyeCYludZ32JMGQ$6/fePu5FX2uaRp6Q8pBMsFdJ7miVF/aLt/M0b4xYbSg=",
+            "first_name": "Alice",
+            "last_name": "Johnson",
+            "role": "CUSTOMER",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+        }
+    },
+    {
+        "model": "billing.user",
+        "pk": 4,
+        "fields": {
+            "username": "bob",
+            "email": "bob@example.com",
+            "password": "pbkdf2_sha256$1500000$w9JYqd1ZyeCYludZ32JMGQ$6/fePu5FX2uaRp6Q8pBMsFdJ7miVF/aLt/M0b4xYbSg=",
+            "first_name": "Bob",
+            "last_name": "Smith",
+            "role": "CUSTOMER",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+        }
+    }
+]

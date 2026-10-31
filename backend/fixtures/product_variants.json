@@ -1,0 +1,30 @@
+
+[
+    {
+        "model": "billing.productvariant",
+        "pk": 1,
+        "fields": {
+            "product": 1,
+            "brand_name": "Analytics Pro",
+            "extra_price": "500.00"
+        }
+    },
+    {
+        "model": "billing.productvariant",
+        "pk": 2,
+        "fields": {
+            "product": 2,
+            "brand_name": "CloudVault Premium",
+            "extra_price": "300.00"
+        }
+    },
+    {
+        "model": "billing.productvariant",
+        "pk": 3,
+        "fields": {
+            "product": 3,
+            "brand_name": "TaskFlow Enterprise",
+            "extra_price": "700.00"
+        }
+    }
+]
