@@ -1,13 +1,25 @@
 from decimal import Decimal, InvalidOperation
 
+from django.contrib.auth import authenticate
+from django.db.models import Sum
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
+from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from .models import User, Product, Plan, Subscription, Invoice, Payment, Discount
+from .models import (
+    Discount,
+    Invoice,
+    Payment,
+    Plan,
+    Product,
+    Role,
+    Subscription,
+    User,
+)
 from .serializers import (
     UserRegisterSerializer,
+    UserSerializer,
     AdminCreateStaffSerializer,
     ProductSerializer,
     PlanSerializer,
@@ -19,21 +31,79 @@ from .serializers import (
 from .services import record_payment_for_invoice, run_batch_billing
 
 
-@api_view(['POST'])
+class IsAdminRole(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.role == Role.ADMIN
+        )
+
+
+class IsStaffRole(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.role in (Role.ADMIN, Role.STAFF)
+        )
+
+
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def register_user(request):
-    """
-    Public registration endpoint. Users registering here are assigned the CUSTOMER role.
-    """
+    """Public registration endpoint for customer accounts."""
+    if request.method == 'GET':
+        return Response({
+            'message': (
+                'Send a POST request with username, email, and password to'
+                ' register.'
+            )
+        })
+
     serializer = UserRegisterSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        user = serializer.save()
+        return Response(
+            {'user': UserSerializer(user).data},
+            status=status.HTTP_201_CREATED,
+        )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
+def login_user(request):
+    identifier = request.data.get('email') or request.data.get('username')
+    password = request.data.get('password')
+
+    if not identifier or not password:
+        return Response(
+            {'error': 'Email/username and password are required.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = User.objects.filter(email=identifier).first()
+    if user is None:
+        user = User.objects.filter(username=identifier).first()
+
+    authenticated_user = None
+    if user is not None:
+        authenticated_user = authenticate(
+            username=user.email,
+            password=password,
+        )
+    if authenticated_user is None:
+        return Response(
+            {'error': 'Invalid credentials.'},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    return Response({'user': UserSerializer(authenticated_user).data})
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminRole])
 def create_staff_member(request):
     """
     Protected endpoint: Only ADMIN users can add new internal staff members.
@@ -43,6 +113,31 @@ def create_staff_member(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsStaffRole])
+def customer_list(request):
+    customers = User.objects.filter(role=Role.CUSTOMER).order_by('id')
+    return Response(UserSerializer(customers, many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsStaffRole])
+def report_stats(request):
+    paid_revenue = (
+        Payment.objects.aggregate(total=Sum('amount'))['total']
+        or Decimal('0.00')
+    )
+    return Response({
+        'customers': User.objects.filter(role=Role.CUSTOMER).count(),
+        'staff': User.objects.filter(role=Role.STAFF).count(),
+        'products': Product.objects.count(),
+        'subscriptions': Subscription.objects.count(),
+        'invoices': Invoice.objects.count(),
+        'payments': Payment.objects.count(),
+        'revenue': paid_revenue,
+    })
 
 
 @api_view(['POST'])
