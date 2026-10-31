@@ -18,6 +18,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />}/>
         <Route path="/admin/customers" element={<Customers />}/>
+        <Route path="/admin/products" element={<Products />}/>
         <Route path="/customer/dashboard" element={<CustomerPortal />}/>
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
