@@ -1,0 +1,23 @@
+
+[
+    {
+        "model": "billing.payment",
+        "pk": 1,
+        "fields": {
+            "invoice": 1,
+            "payment_method": "Card",
+            "amount": "2698.92",
+            "notes": "Full payment for invoice 1."
+        }
+    },
+    {
+        "model": "billing.payment",
+        "pk": 2,
+        "fields": {
+            "invoice": 2,
+            "payment_method": "Bank Transfer",
+            "amount": "5894.10",
+            "notes": "Full payment for invoice 2."
+        }
+    }
+]
