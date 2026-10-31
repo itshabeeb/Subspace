@@ -7,7 +7,8 @@
             "invoice": 1,
             "payment_method": "Card",
             "amount": "2698.92",
-            "notes": "Full payment for invoice 1."
+            "notes": "Full payment for invoice 1.",
+            "payment_date": "2026-10-31"
         }
     },
     {
@@ -17,7 +18,8 @@
             "invoice": 2,
             "payment_method": "Bank Transfer",
             "amount": "5894.10",
-            "notes": "Full payment for invoice 2."
+            "notes": "Full payment for invoice 2.",
+            "payment_date": "2026-10-31"
         }
     }
 ]
