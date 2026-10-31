@@ -1,0 +1,35 @@
+[
+    {
+        "model": "billing.product",
+        "pk": 1,
+        "fields": {
+            "name": "Analytics Suite",
+            "product_type": "Software",
+            "sales_price": "2499.00",
+            "cost_price": "1000.00",
+            "notes": "Business analytics and reporting software."
+        }
+    },
+    {
+        "model": "billing.product",
+        "pk": 2,
+        "fields": {
+            "name": "CloudVault",
+            "product_type": "Cloud Storage",
+            "sales_price": "999.00",
+            "cost_price": "350.00",
+            "notes": "Secure cloud storage and file management."
+        }
+    },
+    {
+        "model": "billing.product",
+        "pk": 3,
+        "fields": {
+            "name": "TaskFlow",
+            "product_type": "Productivity",
+            "sales_price": "1499.00",
+            "cost_price": "600.00",
+            "notes": "Project and task management software."
+        }
+    }
+]

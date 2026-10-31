@@ -1,0 +1,39 @@
+
+[
+    {
+        "model": "billing.plan",
+        "pk": 1,
+        "fields": {
+            "name": "Starter Monthly",
+            "billing_cycle": "MONTHLY",
+            "min_quantity": 1,
+            "start_date": "2026-01-01",
+            "end_date": "2027-12-31",
+            "auto_close": false
+        }
+    },
+    {
+        "model": "billing.plan",
+        "pk": 2,
+        "fields": {
+            "name": "Professional Monthly",
+            "billing_cycle": "MONTHLY",
+            "min_quantity": 5,
+            "start_date": "2026-01-01",
+            "end_date": "2027-12-31",
+            "auto_close": false
+        }
+    },
+    {
+        "model": "billing.plan",
+        "pk": 3,
+        "fields": {
+            "name": "Enterprise Yearly",
+            "billing_cycle": "YEARLY",
+            "min_quantity": 10,
+            "start_date": "2026-01-01",
+            "end_date": "2027-12-31",
+            "auto_close": true
+        }
+    }
+]

@@ -1,0 +1,42 @@
+
+[
+    {
+        "model": "billing.invoice",
+        "pk": 1,
+        "fields": {
+            "subscription": 1,
+            "customer": 3,
+            "subtotal": "2499.00",
+            "tax_amount": "449.82",
+            "discount_amount": "249.90",
+            "total_amount": "2698.92",
+            "status": "PAID"
+        }
+    },
+    {
+        "model": "billing.invoice",
+        "pk": 2,
+        "fields": {
+            "subscription": 2,
+            "customer": 4,
+            "subtotal": "4995.00",
+            "tax_amount": "899.10",
+            "discount_amount": "0.00",
+            "total_amount": "5894.10",
+            "status": "CONFIRMED"
+        }
+    },
+    {
+        "model": "billing.invoice",
+        "pk": 3,
+        "fields": {
+            "subscription": 3,
+            "customer": 3,
+            "subtotal": "17988.00",
+            "tax_amount": "3237.84",
+            "discount_amount": "500.00",
+            "total_amount": "20725.84",
+            "status": "DRAFT"
+        }
+    }
+]

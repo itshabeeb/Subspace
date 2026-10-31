@@ -1,0 +1,39 @@
+
+[
+    {
+        "model": "billing.subscription",
+        "pk": 1,
+        "fields": {
+            "subscription_number": "SUB-2026-001",
+            "customer": 3,
+            "plan": 1,
+            "status": "ACTIVE",
+            "start_date": "2026-10-01",
+            "expiry_date": "2026-11-01"
+        }
+    },
+    {
+        "model": "billing.subscription",
+        "pk": 2,
+        "fields": {
+            "subscription_number": "SUB-2026-002",
+            "customer": 4,
+            "plan": 2,
+            "status": "ACTIVE",
+            "start_date": "2026-10-15",
+            "expiry_date": "2026-11-15"
+        }
+    },
+    {
+        "model": "billing.subscription",
+        "pk": 3,
+        "fields": {
+            "subscription_number": "SUB-2026-003",
+            "customer": 3,
+            "plan": 3,
+            "status": "CONFIRMED",
+            "start_date": "2026-10-20",
+            "expiry_date": "2027-10-20"
+        }
+    }
+]
