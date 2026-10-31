@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.db.models import Sum
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
@@ -99,6 +99,7 @@ def login_user(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
+    login(request, authenticated_user)
     return Response({'user': UserSerializer(authenticated_user).data})
 
 
